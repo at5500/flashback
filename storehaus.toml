@@ -1,0 +1,15 @@
+[database]
+host = "localhost"
+port = 5432
+database = "flashback"
+username = "postgres"
+password = "password"
+min_connections = 1
+max_connections = 10
+connection_timeout_seconds = 30
+idle_timeout_seconds = 600
+max_lifetime_seconds = 3600
+
+[signal]
+callback_timeout_seconds = 30
+max_callbacks = 100

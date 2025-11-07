@@ -1,0 +1,55 @@
+# Git
+.git
+.gitignore
+
+# Rust
+target/
+**/*.rs.bk
+*.pdb
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# MacOS
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Node modules (if frontend is present)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+dist/
+build/
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Test files
+test_*.js
+test_*.sh
+*.test.*
+
+# Docker
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Scripts
+scripts/
+
+# Temporary files
+*.tmp
+*.log

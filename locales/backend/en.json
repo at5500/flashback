@@ -1,0 +1,10 @@
+{
+  "bot": {
+    "welcome": "Hello! Welcome to our support service. An operator will be with you shortly.",
+    "operator_assigned": "An operator has joined the conversation and will assist you.",
+    "conversation_closed": "The conversation has been closed. Thank you for contacting us!",
+    "operator_typing": "Operator is typing...",
+    "message_sent": "Message sent successfully.",
+    "error": "An error occurred. Please try again later."
+  }
+}

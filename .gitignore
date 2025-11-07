@@ -1,0 +1,32 @@
+# Rust
+/target
+Cargo.lock
+
+# Environment variables (contains secrets)
+.env
+**/.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+dist/
+*.log
+
+# Database
+*.db
+*.sqlite
+
+# Temporary files
+tmp/
+temp/
+*.tmp

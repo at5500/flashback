@@ -1,0 +1,65 @@
+[workspace]
+members = ["backend"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+
+[workspace.dependencies]
+# Web framework
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# Telegram Bot
+teloxide = { version = "0.13", features = ["macros"] }
+
+# Database & Events (custom libraries)
+storehaus = { git = "https://github.com/at5500/storehaus", branch = "main" }
+watchtower = { git = "https://github.com/at5500/watchtower", branch = "master" }
+
+# Peer dependencies for StoreHaus macros
+sqlx = { version = "0.8", features = ["runtime-tokio", "tls-native-tls", "postgres", "uuid", "chrono"] }
+async-trait = "0.1"
+
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Authentication
+jsonwebtoken = "9.2"
+bcrypt = "0.15"
+
+# UUID
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# Date/Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Environment
+dotenv = "0.15"
+
+# Logging & Tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Validation
+validator = { version = "0.18", features = ["derive"] }
+
+# HTTP client (for webhooks, if needed)
+reqwest = { version = "0.11", features = ["json"] }
+
+# Lazy static initialization
+once_cell = "1.19"
+
+# CLI argument parsing
+clap = { version = "4.5", features = ["derive"] }
