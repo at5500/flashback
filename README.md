@@ -51,7 +51,7 @@ Users communicate with a Telegram bot that acts as a mediator between the user a
 
 ### Conversations & Messaging
 
-The main workspace where operators communicate with customers in real-time. View all conversations in a sidebar with status indicators (Active, Waiting, Closed), exchange messages with full history and timestamps, see typing indicators and delivery confirmations, and access user information including name, phone, and country.
+The main workspace where operators communicate with customers in real-time. View all conversations in a sidebar with status indicators (Active, Waiting, Closed), exchange messages with full history, see typing indicators and delivery confirmations, and access user information including name, phone, and country.
 
 <div align="center">
   <a href="docs/screenshots/conversations.png">
@@ -62,7 +62,7 @@ The main workspace where operators communicate with customers in real-time. View
 
 ### User Profile
 
-Access detailed information about each customer. View complete user profile with contact details and location, see full conversation history across all interactions, track user tags and categorization, and monitor user activity timeline.
+View complete user profile and monitor user activity timeline.
 
 <div align="center">
   <a href="docs/screenshots/user-profile.png">
@@ -84,7 +84,7 @@ Speed up responses with pre-configured message templates. Create custom template
 
 ### User Settings
 
-Personalize your operator experience. Configure notification preferences and sound alerts, customize interface language and theme, manage your profile and account security, and set up quick actions and keyboard shortcuts.
+Configure notification preferences and sound alerts, customize interface language and theme.
 
 <div align="center">
   <a href="docs/screenshots/user-settings.png">
@@ -103,59 +103,6 @@ Manage system configuration and operator accounts. Configure Telegram bot token 
   </a>
   <p><i>Administration interface for system and user management (click to enlarge)</i></p>
 </div>
-
-## Architecture
-
-```
-┌─────────────────┐
-│      User       │
-│   in Telegram   │
-└────────┬────────┘
-         │
-         ↓
-┌─────────────────────────────────┐
-│    Telegram Bot (Rust/tokio)    │
-│  • teloxide                     │
-└────────┬────────────────────────┘
-         │
-         ↓
-┌──────────────────────────────────────────────────┐
-│          Backend Server (Rust)                   │
-│                                                  │
-│  ┌────────────────────────────────────────────┐  │
-│  │  WATCHTOWER (Event System)                 │  │
-│  │  • WebSocket transport                     │  │
-│  │  • Real-time events                        │  │
-│  │  • Circuit breaker + DLQ                   │  │
-│  └────────────────────────────────────────────┘  │
-│                                                  │
-│  ┌────────────────────────────────────────────┐  │
-│  │  STOREHAUS (Database Layer)                │  │
-│  │  • PostgreSQL ORM                          │  │
-│  │  • Signal system                           │  │
-│  │  • Auto-migration                          │  │
-│  └────────────────────────────────────────────┘  │
-│                                                  │
-│  ┌────────────────────────────────────────────┐  │
-│  │  HTTP API (Axum)                           │  │
-│  │  • REST endpoints                          │  │
-│  │  • JWT authentication                      │  │
-│  └────────────────────────────────────────────┘  │
-└──────────────────────────┬───────────────────────┘
-                           │
-                     ┌─────▼──────┐
-                     │ PostgreSQL │
-                     └─────┬──────┘
-                           │
-                     ┌─────▼───────────────────────┐
-                     │  Web Interface (React)      │
-                     │  • shadcn/ui components     │
-                     │  • Tailwind CSS             │
-                     │  • WebSocket client         │
-                     │  • Vite + TypeScript        │
-                     │  • PWA                      │
-                     └─────────────────────────────┘
-```
 
 ## Tech Stack
 
