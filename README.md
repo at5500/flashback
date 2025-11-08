@@ -167,7 +167,42 @@ FlashBack/
 - Docker
 - Docker Compose
 
-### Running with Docker (Recommended)
+### Option 1: Pre-built Images (Recommended)
+
+Use pre-built Docker images from Docker Hub for fastest setup:
+
+1. **Clone the repository**
+```bash
+git clone <repository-url>
+cd FlashBack
+```
+
+2. **Start the application**
+```bash
+./scripts/start-prod.sh
+```
+
+The script will automatically:
+- Pull latest images from Docker Hub
+- Check for `.env` file existence
+- Start all services (PostgreSQL + Backend + Frontend)
+- Wait for services to be ready
+
+**Management commands:**
+```bash
+# View logs
+./scripts/logs.sh
+
+# Stop
+./scripts/stop-prod.sh
+
+# Restart with latest images
+./scripts/restart-prod.sh
+```
+
+### Option 2: Build from Source
+
+For development or customization, build images locally:
 
 1. **Clone the repository**
 ```bash
@@ -182,11 +217,29 @@ cd FlashBack
 
 The script will automatically:
 - Check for `.env` file existence
-- Build Docker images
-- Start all services (PostgreSQL + Backend)
+- Build Docker images from source
+- Start all services
 - Wait for services to be ready
 
-After startup, the application will be available at:
+**Management commands:**
+```bash
+# View logs
+./scripts/logs.sh
+
+# Stop
+./scripts/stop.sh
+
+# Restart
+./scripts/restart.sh
+
+# Complete cleanup (including database data)
+docker-compose down -v
+```
+
+### After Startup
+
+Application will be available at:
+- Frontend: `http://localhost:8080`
 - Backend API: `http://localhost:3000`
 - WebSocket: `ws://localhost:3000`
 - PostgreSQL: `localhost:5432`
@@ -197,32 +250,6 @@ After startup, the application will be available at:
 
 **Telegram Bot Setup:**
 - The bot token is configured through the web interface in the settings section after logging in
-
-### Application Management
-
-**View logs:**
-```bash
-./scripts/logs.sh
-
-# or for a specific service
-./scripts/logs.sh backend
-./scripts/logs.sh postgres
-```
-
-**Stop the application:**
-```bash
-./scripts/stop.sh
-```
-
-**Restart:**
-```bash
-./scripts/restart.sh
-```
-
-**Complete cleanup (including database data):**
-```bash
-docker-compose down -v
-```
 
 ### Local Development (without Docker)
 

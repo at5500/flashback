@@ -1,0 +1,71 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: flashback_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: flashback
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - flashback_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend (Rust) - Pre-built image
+  backend:
+    image: at5500/flashback-backend:latest
+    container_name: flashback_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/flashback
+      JWT_SECRET: ${JWT_SECRET:-change_me_in_production}
+      JWT_EXPIRATION: 2592000
+      BACKEND_HOST: 0.0.0.0
+      BACKEND_PORT: 3000
+      LOG_LEVEL: ${LOG_LEVEL:-}
+      RUST_LOG: ${RUST_LOG:-}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - flashback_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  # Frontend (React) - Pre-built image
+  frontend:
+    image: at5500/flashback-frontend:latest
+    container_name: flashback_frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - flashback_network
+
+networks:
+  flashback_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
