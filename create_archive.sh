@@ -15,7 +15,8 @@ echo "Creating archive $ARCHIVE_NAME..."
 mkdir -p "$TEMP_DIR/$PROJECT_DIR"
 
 # Copy all files except exclusions
-rsync -av --progress \
+# --no-xattrs prevents copying macOS extended attributes
+rsync -av --progress --no-xattrs \
   --exclude='.git' \
   --exclude='node_modules' \
   --exclude='target' \
