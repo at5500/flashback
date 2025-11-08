@@ -38,7 +38,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `at5500/flashback-backend:latest`
   - `at5500/flashback-frontend:latest`
 - Production deployment with `docker-compose.prod.yml`
-- Management scripts for both development and production
+- Makefile for unified command interface
+  - Automatic docker-compose command detection (v1/v2 compatibility)
+  - Organized targets for development and production workflows
 
 ### Documentation
 - README with quick start guide

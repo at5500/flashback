@@ -166,6 +166,7 @@ FlashBack/
 
 - Docker
 - Docker Compose
+- Make (optional, but recommended)
 
 ### Option 1: Pre-built Images (Recommended)
 
@@ -179,25 +180,23 @@ cd FlashBack
 
 2. **Start the application**
 ```bash
-./scripts/start-prod.sh
+make start-prod
 ```
 
-The script will automatically:
+This will automatically:
 - Pull latest images from Docker Hub
 - Check for `.env` file existence
 - Start all services (PostgreSQL + Backend + Frontend)
-- Wait for services to be ready
 
-**Management commands:**
+**Common commands:**
 ```bash
-# View logs
-./scripts/logs.sh
-
-# Stop
-./scripts/stop-prod.sh
-
-# Restart with latest images
-./scripts/restart-prod.sh
+make help          # Show all available commands
+make start-prod    # Start with pre-built images
+make stop-prod     # Stop application
+make restart-prod  # Restart with latest images
+make logs          # View all logs
+make logs-backend  # View backend logs only
+make status        # Show container status
 ```
 
 ### Option 2: Build from Source
@@ -212,28 +211,23 @@ cd FlashBack
 
 2. **Start the application**
 ```bash
-./scripts/start.sh
+make start
 ```
 
-The script will automatically:
+This will automatically:
 - Check for `.env` file existence
 - Build Docker images from source
 - Start all services
-- Wait for services to be ready
 
-**Management commands:**
+**Development commands:**
 ```bash
-# View logs
-./scripts/logs.sh
-
-# Stop
-./scripts/stop.sh
-
-# Restart
-./scripts/restart.sh
-
-# Complete cleanup (including database data)
-docker-compose down -v
+make start         # Start (build from source)
+make stop          # Stop application
+make restart       # Restart (rebuild)
+make logs          # View all logs
+make build         # Build images only
+make clean         # Remove containers
+make clean-all     # Remove containers and volumes (WARNING: deletes database!)
 ```
 
 ### After Startup
@@ -250,6 +244,22 @@ Application will be available at:
 
 **Telegram Bot Setup:**
 - The bot token is configured through the web interface in the settings section after logging in
+
+### For Developers
+
+**Build and push Docker images:**
+```bash
+make build         # Build both images
+make push          # Push to Docker Hub (requires authentication)
+```
+
+**Individual image operations:**
+```bash
+make build-backend   # Build backend only
+make build-frontend  # Build frontend only
+make push-backend    # Push backend only
+make push-frontend   # Push frontend only
+```
 
 ### Local Development (without Docker)
 
