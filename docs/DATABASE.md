@@ -542,80 +542,39 @@ let greeting_templates = store.find_many(
 
 ## Database Setup
 
-### Automatic Setup (Recommended)
+### Docker Setup (Recommended)
 
-Use the automatic database setup script:
+When using Docker Compose, the database is automatically set up with all required extensions. See the [Quick Start Guide](../README.md#quick-start) for instructions.
 
-```bash
-./scripts/setup-database.sh
-```
+### Local Development Setup
 
-The script performs the following actions:
-
-1. **Checks for PostgreSQL** presence and status
-2. **Tests database connection**
-3. **Creates database** `flashback` (with drop/recreate option)
-4. **Installs extensions**:
-   - `uuid-ossp` - for UUID generation
-   - `pg_trgm` - for full-text search
-5. **Updates `.env` file** with the correct DATABASE_URL
-6. **Preserves existing values** of TELEGRAM_BOT_TOKEN and JWT_SECRET
-
-#### Environment Variables
-
-The script uses the following environment variables (with default values):
-
-```bash
-DB_HOST=localhost         # PostgreSQL host
-DB_PORT=5432              # PostgreSQL port
-DB_NAME=flashback         # Database name
-DB_USER=postgres          # PostgreSQL user
-DB_PASSWORD=password      # PostgreSQL password
-```
-
-Example with custom parameters:
-
-```bash
-export DB_HOST=192.168.1.100
-export DB_PORT=5433
-export DB_NAME=flashback_dev
-export DB_USER=flashback_user
-export DB_PASSWORD=secure_password
-
-./scripts/setup-database.sh
-```
-
-### Manual Setup
+For local development without Docker:
 
 #### Step 1: Create Database
 
-```bash
-psql -U postgres -f scripts/sql/01_init_database.sql
-```
-
-The `01_init_database.sql` script contains:
-
 ```sql
+-- Connect to PostgreSQL
+psql -U postgres
+
 -- Create database
 CREATE DATABASE flashback;
 
 -- Connect to database
 \c flashback
 
--- Install extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pg_trgm";
-
--- Set access permissions
-GRANT ALL PRIVILEGES ON DATABASE flashback TO postgres;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO postgres;
-
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO postgres;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres;
+-- Install pg_trgm extension for future full-text search
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 ```
 
-#### Step 2: Run Application (StoreHaus Auto-migration)
+#### Step 2: Configure Environment
+
+Copy `.env.example` to `.env` and update `DATABASE_URL` if needed:
+
+```env
+DATABASE_URL=postgresql://postgres:password@localhost:5432/flashback
+```
+
+#### Step 3: Run Application (StoreHaus Auto-migration)
 
 On first run, StoreHaus will automatically create all tables:
 
@@ -627,53 +586,7 @@ cargo run
 StoreHaus will perform:
 - Creation of all tables according to models
 - Addition of system fields (`__created_at__`, `__updated_at__`, `__deleted_at__`, `__tags__`)
-- Creation of basic indexes (primary keys, foreign keys)
-
-#### Step 3: Index Optimization
-
-After first run, it's recommended to install optimized indexes:
-
-```bash
-psql -h localhost -p 5432 -U postgres -d flashback -f scripts/sql/02_create_indexes.sql
-```
-
-The `02_create_indexes.sql` script creates:
-
-**telegram_users:**
-- Index for blocked users (partial index)
-- GIN indexes for full-text search by username and first_name
-
-**operators:**
-- Unique index for email
-- Index for active operators (partial index)
-
-**conversations:**
-- Indexes for searching by telegram_user_id and operator_id
-- Index for searching by status
-- Composite index (operator_id + status) for operator dashboard
-- Index for sorting by last message time
-- Composite index for unread conversations
-
-**messages:**
-- Indexes for searching by conversation_id
-- Composite index (conversation_id + __created_at__) for chronology
-- Indexes for unread and operator messages
-- Index for messages with media (partial index)
-- GIN index for full-text search by content
-
-**message_templates:**
-- Index for searching by category (partial index)
-- GIN index for full-text search by title
-
-### Updating .env File
-
-After database setup, update the `.env` file:
-
-```env
-DATABASE_URL=postgresql://postgres:password@localhost:5432/flashback
-```
-
-If you used the `setup-database.sh` script, this will happen automatically.
+- Creation of basic indexes (primary keys, unique constraints, foreign keys)
 
 ## Database Initialization (Code)
 

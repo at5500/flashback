@@ -47,9 +47,6 @@ docker-compose.yml
 Dockerfile
 .dockerignore
 
-# Scripts
-scripts/
-
 # Temporary files
 *.tmp
 *.log

@@ -18,10 +18,11 @@ cd FlashBack
 
 2. **Start the application**
 ```bash
-./scripts/start.sh
+make start-prod
 ```
 
 The application will be available at:
+- Frontend: http://localhost:8080
 - Backend API: http://localhost:3000
 - WebSocket: ws://localhost:3000
 
@@ -35,14 +36,20 @@ The application will be available at:
 ### Management
 
 ```bash
-# View logs
-./scripts/logs.sh
+# View all logs
+make logs
 
-# Stop
-./scripts/stop.sh
+# View backend logs only
+make logs-backend
 
-# Restart
-./scripts/restart.sh
+# Stop application
+make stop-prod
+
+# Restart with latest images
+make restart-prod
+
+# Show all available commands
+make help
 ```
 
 ---

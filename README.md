@@ -276,17 +276,28 @@ make push-frontend   # Push frontend only
 
 1. **Setup PostgreSQL database**
 
-```bash
-./scripts/setup-database.sh
+```sql
+-- Connect to PostgreSQL
+psql -U postgres
+
+-- Create database
+CREATE DATABASE flashback;
+
+-- Connect to the database
+\c flashback
+
+-- Enable pg_trgm extension for future full-text search
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 ```
 
-The script will automatically:
-- Check PostgreSQL installation and status
-- Create `flashback` database
-- Install required extensions (uuid-ossp, pg_trgm)
-- Update `.env` file with correct DATABASE_URL
+2. **Configure environment**
 
-2. **Run backend**
+Copy `.env.example` to `.env` and update `DATABASE_URL` if needed:
+```env
+DATABASE_URL=postgresql://postgres:password@localhost:5432/flashback
+```
+
+3. **Run backend**
 ```bash
 cd backend
 cargo run
@@ -294,7 +305,7 @@ cargo run
 
 StoreHaus will automatically create all necessary tables on first launch.
 
-3. **Run frontend**
+4. **Run frontend**
 ```bash
 cd frontend
 npm install
@@ -342,6 +353,22 @@ password = "password"
 min_connections = 1
 max_connections = 10
 ```
+
+## Future Improvements
+
+### Database Optimization
+
+**Full-Text Search Indexes**
+
+For improved search performance, consider adding GIN (Generalized Inverted Index) indexes:
+
+- **User search**: GIN indexes on `telegram_users.username` and `telegram_users.first_name` for fuzzy text search
+- **Message search**: GIN index on `messages.content` for full-text message search
+- **Template search**: GIN index on `message_templates.title` for template search
+
+These indexes use the `pg_trgm` extension (already installed) and significantly improve search performance for partial text matches.
+
+See [Database Documentation](docs/DATABASE.md) for implementation details.
 
 ## Attribution
 
