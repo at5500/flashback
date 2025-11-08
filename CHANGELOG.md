@@ -34,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Nginx for frontend serving
 - Automated database migrations via StoreHaus
 - Development and production configurations
+- Pre-built Docker images on Docker Hub
+  - `at5500/flashback-backend:latest`
+  - `at5500/flashback-frontend:latest`
+- Production deployment with `docker-compose.prod.yml`
+- Management scripts for both development and production
 
 ### Documentation
 - README with quick start guide
