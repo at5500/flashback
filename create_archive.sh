@@ -38,7 +38,14 @@ rsync -av --progress \
   . "$TEMP_DIR/$PROJECT_DIR/"
 
 # Create archive (COPYFILE_DISABLE=1 prevents adding ._ files on macOS)
-COPYFILE_DISABLE=1 tar -czf "$ARCHIVE_NAME" -C "$TEMP_DIR" "$PROJECT_DIR"
+# --no-mac-metadata prevents macOS extended attributes warnings (macOS only)
+if tar --version 2>&1 | grep -q "bsdtar"; then
+  # macOS BSD tar - use --no-mac-metadata
+  COPYFILE_DISABLE=1 tar --no-mac-metadata -czf "$ARCHIVE_NAME" -C "$TEMP_DIR" "$PROJECT_DIR"
+else
+  # GNU tar or other - use standard flags
+  COPYFILE_DISABLE=1 tar -czf "$ARCHIVE_NAME" -C "$TEMP_DIR" "$PROJECT_DIR"
+fi
 
 # Remove temporary directory
 rm -rf "$TEMP_DIR"
