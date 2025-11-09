@@ -35,9 +35,9 @@ start: ## Start application (build from source)
 	@$(DC) build
 	@$(DC) up -d
 	@echo -e "$(GREEN)✓ FlashBack is running!$(NC)"
-	@echo "  Frontend:  http://localhost:8080"
-	@echo "  Backend:   http://localhost:3000"
-	@echo "  WebSocket: ws://localhost:3000"
+	@echo "  Frontend:  http://0.0.0.0:8080 (or http://<your-server-ip>:8080)"
+	@echo "  Backend:   http://0.0.0.0:3000 (or http://<your-server-ip>:3000)"
+	@echo "  WebSocket: ws://0.0.0.0:3000"
 	@echo ""
 	@echo "Default credentials: op@example.com / 123456"
 
@@ -65,9 +65,9 @@ start-prod: ## Start application with pre-built images from Docker Hub
 	@$(DC) -f docker-compose.prod.yml pull
 	@$(DC) -f docker-compose.prod.yml up -d
 	@echo -e "$(GREEN)✓ FlashBack is running!$(NC)"
-	@echo "  Frontend:  http://localhost:8080"
-	@echo "  Backend:   http://localhost:3000"
-	@echo "  WebSocket: ws://localhost:3000"
+	@echo "  Frontend:  http://0.0.0.0:8080 (or http://<your-server-ip>:8080)"
+	@echo "  Backend:   http://0.0.0.0:3000 (or http://<your-server-ip>:3000)"
+	@echo "  WebSocket: ws://0.0.0.0:3000"
 	@echo ""
 	@echo "Default credentials: op@example.com / 123456"
 
