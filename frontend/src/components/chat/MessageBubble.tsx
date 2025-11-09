@@ -35,7 +35,7 @@ function MessageBubbleComponent({ message, showAvatar = true, showSenderName = f
   // Get photo URL (use proxy endpoint if photo exists)
   const getPhotoUrl = () => {
     if (user?.photo_url) {
-      return `${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}/telegram-photo/${user.id}`;
+      return `/api/telegram-photo/${user.id}`;
     }
     return null;
   };

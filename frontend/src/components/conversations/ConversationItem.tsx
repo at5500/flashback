@@ -86,7 +86,7 @@ function ConversationItemComponent({
   const getPhotoUrl = () => {
     if (telegram_user.photo_url) {
       // Use backend proxy endpoint to avoid CORS issues
-      return `${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}/telegram-photo/${telegram_user.id}`;
+      return `/api/telegram-photo/${telegram_user.id}`;
     }
     return null;
   };

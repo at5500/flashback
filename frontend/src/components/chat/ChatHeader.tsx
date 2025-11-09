@@ -32,7 +32,7 @@ export function ChatHeader({ conversation, onBack, showBackButton = false }: Cha
   // Get photo URL (use proxy endpoint if photo exists)
   const getPhotoUrl = () => {
     if (telegram_user.photo_url) {
-      return `${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}/telegram-photo/${telegram_user.id}`;
+      return `/api/telegram-photo/${telegram_user.id}`;
     }
     return null;
   };
