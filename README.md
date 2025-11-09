@@ -261,6 +261,42 @@ make push-backend    # Push backend only
 make push-frontend   # Push frontend only
 ```
 
+### Troubleshooting
+
+#### Database Connection Error
+
+If you see `database "flashback" does not exist` error:
+
+**Problem:** PostgreSQL init scripts (`init.sql`) only run when the volume is first created. If you're restarting with an existing volume, the database might not exist.
+
+**Solution:** Remove volumes and restart:
+
+```bash
+# Stop and remove all containers and volumes
+make clean-all
+
+# Start fresh
+make start-prod
+```
+
+**Note:** This will delete all data in the database. Only use this if you haven't added any important data yet.
+
+**Alternative:** Create database manually:
+
+```bash
+# Connect to PostgreSQL
+docker exec -it flashback_postgres psql -U postgres
+
+# Create database and extension
+CREATE DATABASE flashback;
+\c flashback
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+\q
+
+# Restart backend
+docker restart flashback_backend
+```
+
 ### Local Development (without Docker)
 
 <details>
