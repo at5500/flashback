@@ -1,23 +1,27 @@
 services:
   # PostgreSQL Database
+  # This service runs when using local database mode (default)
+  # For external database, use docker-compose.external-db.yml override
   postgres:
     image: postgres:15-alpine
     container_name: flashback_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: flashback
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${POSTGRES_DB:-flashback}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # REQUIRED in production
       POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
-    ports:
-      - "5432:5432"
+    # SECURITY: Do NOT expose PostgreSQL port in production
+    # Database is only accessible from within Docker network
+    # ports:
+    #   - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - flashback_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,14 +32,42 @@ services:
     container_name: flashback_backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/flashback
-      JWT_SECRET: ${JWT_SECRET:-change_me_in_production}
-      JWT_EXPIRATION: 2592000
+      # JWT Configuration - REQUIRED in production
+      JWT_SECRET: ${JWT_SECRET}  # Must be set in .env
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-2592000}
+
+      # Backend Server Configuration
       BACKEND_HOST: 0.0.0.0
       BACKEND_PORT: 3000
-      LOG_LEVEL: ${LOG_LEVEL:-}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
       RUST_LOG: ${RUST_LOG:-}
-      ENVIRONMENT: ${ENVIRONMENT:-production}
+      ENVIRONMENT: production
+
+      # Local Database Configuration (used when EXTERNAL_DB_HOST is not set)
+      # Points to the postgres service in this docker-compose
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-flashback}
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}  # REQUIRED in production
+
+      # External Database Configuration (optional)
+      # If EXTERNAL_DB_HOST is set, it takes priority over DB_* variables
+      # Use docker-compose.external-db.yml override for external database mode
+      EXTERNAL_DB_HOST: ${EXTERNAL_DB_HOST:-}
+      EXTERNAL_DB_PORT: ${EXTERNAL_DB_PORT:-}
+      EXTERNAL_DB_NAME: ${EXTERNAL_DB_NAME:-}
+      EXTERNAL_DB_USER: ${EXTERNAL_DB_USER:-}
+      EXTERNAL_DB_PASSWORD: ${EXTERNAL_DB_PASSWORD:-}
+
+      # Database connection pool settings
+      DB_MIN_CONNECTIONS: ${DB_MIN_CONNECTIONS:-2}
+      DB_MAX_CONNECTIONS: ${DB_MAX_CONNECTIONS:-20}
+      DB_CONNECTION_TIMEOUT: ${DB_CONNECTION_TIMEOUT:-30}
+      DB_IDLE_TIMEOUT: ${DB_IDLE_TIMEOUT:-600}
+      DB_MAX_LIFETIME: ${DB_MAX_LIFETIME:-3600}
     ports:
       - "3000:3000"
     depends_on:

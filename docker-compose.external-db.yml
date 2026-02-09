@@ -1,0 +1,37 @@
+# Docker Compose override for external database deployment
+# Use this file when your PostgreSQL database is on a separate server
+#
+# Usage:
+#   docker-compose -f docker-compose.prod.yml -f docker-compose.external-db.yml up
+#
+# Requirements:
+#   - Set EXTERNAL_DB_* variables in .env
+#   - Ensure external database server is accessible from this host
+#   - Database should already be created on external server
+
+services:
+  # Disable local postgres service when using external DB
+  postgres:
+    # Scale to 0 to disable this service
+    deploy:
+      replicas: 0
+
+  # Backend will connect to external database using EXTERNAL_DB_* variables
+  backend:
+    # Remove dependency on local postgres
+    depends_on: []
+    environment:
+      # Override DB_* variables (set them to empty to avoid confusion)
+      DB_HOST: ""
+      DB_PORT: ""
+      DB_NAME: ""
+      DB_USER: ""
+      DB_PASSWORD: ""
+
+      # Ensure backend uses external database configuration
+      # These should be set in .env file
+      EXTERNAL_DB_HOST: ${EXTERNAL_DB_HOST}
+      EXTERNAL_DB_PORT: ${EXTERNAL_DB_PORT}
+      EXTERNAL_DB_NAME: ${EXTERNAL_DB_NAME}
+      EXTERNAL_DB_USER: ${EXTERNAL_DB_USER}
+      EXTERNAL_DB_PASSWORD: ${EXTERNAL_DB_PASSWORD}

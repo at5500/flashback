@@ -168,9 +168,25 @@ FlashBack/
 - Docker Compose
 - Make (optional, but recommended)
 
+### Security First: Generate Secrets (Production Only)
+
+**IMPORTANT:** Before deploying to production, generate secure credentials:
+
+```bash
+make generate-secrets
+```
+
+This creates strong passwords for:
+- PostgreSQL database
+- JWT authentication
+
+Copy the generated values to your `.env` file.
+
 ### Option 1: Pre-built Images (Recommended)
 
-Use pre-built Docker images from Docker Hub for fastest setup:
+Use pre-built Docker images from Docker Hub for fastest setup.
+
+#### Single-Server Deployment (Database + Backend + Frontend)
 
 1. **Clone the repository**
 ```bash
@@ -178,26 +194,85 @@ git clone <repository-url>
 cd FlashBack
 ```
 
-2. **Start the application**
+2. **Generate secure secrets (production only)**
 ```bash
-make start-prod
+make generate-secrets
+# Copy generated values to .env
+```
+
+3. **Start the application**
+```bash
+make start-local-db
 ```
 
 This will automatically:
 - Pull latest images from Docker Hub
-- Check for `.env` file existence
-- Start all services (PostgreSQL + Backend + Frontend)
+- Start PostgreSQL in Docker (isolated, not exposed externally)
+- Start Backend and Frontend
+- Backend connects to local PostgreSQL via Docker network
 
 **Common commands:**
 ```bash
-make help          # Show all available commands
-make start-prod    # Start with pre-built images
-make stop-prod     # Stop application
-make restart-prod  # Restart with latest images
-make logs          # View all logs
-make logs-backend  # View backend logs only
-make status        # Show container status
+make help             # Show all available commands
+make start-local-db   # Start with local database
+make stop-prod        # Stop application
+make restart-prod     # Restart with latest images
+make logs             # View all logs
+make logs-backend     # View backend logs only
+make status           # Show container status
 ```
+
+#### Multi-Server Deployment (Separate Database Server)
+
+Use this when you want to run PostgreSQL on a dedicated database server.
+
+**PostgreSQL Installation Options:**
+- Native installation (apt/yum)
+- Docker on database server
+- Managed services (AWS RDS, DigitalOcean, Google Cloud SQL, Azure)
+
+See [detailed installation instructions](docs/QUICKSTART.md#external-database-mode-multi-server) for all options.
+
+1. **Setup database server** (on your DB server)
+```sql
+-- On your PostgreSQL server (any installation method)
+CREATE DATABASE flashback;
+CREATE USER flashback_user WITH PASSWORD '<secure_password>';
+GRANT ALL PRIVILEGES ON DATABASE flashback TO flashback_user;
+
+-- Enable required extensions
+\c flashback
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+GRANT ALL ON SCHEMA public TO flashback_user;
+```
+
+2. **Configure FlashBack server** (on your application server)
+```bash
+# Clone repository
+git clone <repository-url>
+cd FlashBack
+
+# Generate secrets
+make generate-secrets
+
+# Edit .env and set:
+EXTERNAL_DB_HOST=your-db-server.example.com
+EXTERNAL_DB_PORT=5432
+EXTERNAL_DB_NAME=flashback
+EXTERNAL_DB_USER=flashback_user
+EXTERNAL_DB_PASSWORD=<your_secure_password>
+JWT_SECRET=<generated_jwt_secret>
+```
+
+3. **Start the application**
+```bash
+make start-external-db
+```
+
+This will:
+- Start only Backend and Frontend (no local PostgreSQL)
+- Backend connects to external database using EXTERNAL_DB_* variables
+- Provides better isolation and scalability
 
 ### Option 2: Build from Source
 
@@ -352,33 +427,64 @@ npm run dev
 
 ## Configuration
 
-### Backend (.env)
-```env
-# Database
-DATABASE_URL=postgresql://postgres:password@localhost:5432/flashback
+### Backend Configuration
 
-# JWT
-JWT_SECRET=your_secret_key_change_in_production
+FlashBack supports three database configuration modes:
+
+#### Mode 1: Docker Compose with Local Database (default, recommended)
+
+PostgreSQL runs in Docker on the same server. Database credentials are set via `.env`:
+
+```env
+# JWT Configuration
+JWT_SECRET=<use make generate-secrets>
 JWT_EXPIRATION=2592000  # 30 days in seconds
+
+# PostgreSQL (for Docker Compose)
+POSTGRES_PASSWORD=<use make generate-secrets>
+POSTGRES_USER=postgres
+POSTGRES_DB=flashback
 
 # Backend Server
 BACKEND_HOST=0.0.0.0
 BACKEND_PORT=3000
-
-# Frontend Server (for local development)
-FRONTEND_HOST=0.0.0.0
-FRONTEND_PORT=8080
+ENVIRONMENT=production
 
 # Logging
 RUST_LOG=info,flashback_backend=debug
-
-# Environment (development, production)
-ENVIRONMENT=development
 ```
 
-**Note:** Telegram bot token is configured through the web interface, not via .env file
+Docker Compose automatically sets `DB_HOST=postgres`, `DB_PORT=5432`, etc. pointing to the postgres container.
 
-### StoreHaus (storehaus.toml)
+#### Mode 2: External Database (multi-server)
+
+PostgreSQL runs on a separate database server:
+
+```env
+# JWT Configuration
+JWT_SECRET=<use make generate-secrets>
+JWT_EXPIRATION=2592000
+
+# External Database Configuration
+EXTERNAL_DB_HOST=db.example.com
+EXTERNAL_DB_PORT=5432
+EXTERNAL_DB_NAME=flashback
+EXTERNAL_DB_USER=flashback_user
+EXTERNAL_DB_PASSWORD=<secure_password>
+
+# Backend Server
+BACKEND_HOST=0.0.0.0
+BACKEND_PORT=3000
+ENVIRONMENT=production
+
+# Logging
+RUST_LOG=info,flashback_backend=info
+```
+
+#### Mode 3: Local Development (without Docker)
+
+For local Rust development without Docker, configuration is read from `storehaus.toml`:
+
 ```toml
 [database]
 host = "localhost"
@@ -386,9 +492,87 @@ port = 5432
 database = "flashback"
 username = "postgres"
 password = "password"
+```
+
+No `.env` database configuration needed for this mode.
+
+**Security Notes:**
+- Telegram bot token is configured through the web interface, not via .env file
+- **Never** commit `.env` to version control
+- Use `make generate-secrets` to create strong passwords for production
+- The backend validates credentials at startup and refuses to start with default passwords in production mode
+
+### StoreHaus (storehaus.toml)
+
+Used only in local database mode. When using external database (`EXTERNAL_DB_HOST` set), this file is ignored.
+
+```toml
+[database]
+host = "localhost"
+port = 5432
+database = "flashback"
+username = "postgres"
+password = "password"  # Only for local development
 min_connections = 1
 max_connections = 10
 ```
+
+## Security
+
+### Production Deployment Checklist
+
+Before deploying to production, ensure:
+
+1. **Generate Secure Credentials**
+   ```bash
+   make generate-secrets
+   ```
+   Copy generated values to `.env`
+
+2. **Set ENVIRONMENT=production**
+   ```env
+   ENVIRONMENT=production
+   ```
+
+3. **Configure Strong Passwords**
+   - JWT_SECRET: minimum 32 characters
+   - Database passwords: minimum 16 characters
+   - Never use default passwords (`password`, `123456`, etc.)
+
+4. **Database Isolation**
+   - Local mode: PostgreSQL port NOT exposed externally (stays inside Docker network)
+   - External mode: Use firewall rules to restrict database access
+   - Use strong database passwords
+   - Consider SSL/TLS for database connections
+
+5. **Validation at Startup**
+   The backend automatically validates credentials on startup:
+   - Rejects default/weak passwords in production mode
+   - Checks JWT_SECRET strength
+   - Verifies database password length
+   - Fails fast if security requirements not met
+
+### Default Passwords (Development Only)
+
+These passwords are for local development only and will be **rejected** in production:
+- `password`
+- `postgres`
+- `admin`
+- `123456`
+- `your_secret_key_change_in_production`
+- `change_me_in_production`
+
+### Network Security
+
+**Local Database Mode:**
+- PostgreSQL runs in Docker, NOT exposed to external network
+- Only accessible from backend container via Docker network
+- No port 5432 binding in production
+
+**External Database Mode:**
+- Configure firewall to allow only application server IP
+- Use SSL/TLS for database connections
+- Consider VPN or private network for database access
 
 ## Future Improvements
 

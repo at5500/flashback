@@ -1,4 +1,4 @@
-.PHONY: help start start-prod stop stop-prod restart restart-prod logs logs-backend logs-frontend logs-postgres build build-backend build-frontend push push-backend push-frontend pull clean clean-all
+.PHONY: help start start-prod start-local-db start-external-db stop stop-prod restart restart-prod logs logs-backend logs-frontend logs-postgres build build-backend build-frontend push push-backend push-frontend pull clean clean-all generate-secrets
 
 SHELL := /bin/bash
 
@@ -55,21 +55,52 @@ restart: ## Restart application (development)
 
 ##@ Production (Pre-built Images)
 
-start-prod: ## Start application with pre-built images from Docker Hub
-	@echo -e "$(GREEN)Starting FlashBack (production mode)...$(NC)"
+start-prod: start-local-db ## Start application with pre-built images and local database (alias for start-local-db)
+
+start-local-db: ## Start with local PostgreSQL database in Docker
+	@echo -e "$(GREEN)Starting FlashBack with local database...$(NC)"
 	@if [ ! -f .env ]; then \
 		echo -e "$(YELLOW)Creating .env from .env.example...$(NC)"; \
 		cp .env.example .env; \
+		echo -e "$(RED)WARNING: Using default credentials! Run 'make generate-secrets' for production.$(NC)"; \
+	fi
+	@if grep -q "JWT_SECRET=your_secret_key_change_in_production" .env 2>/dev/null; then \
+		echo -e "$(RED)WARNING: Default JWT_SECRET detected! Run 'make generate-secrets' before production deployment.$(NC)"; \
+	fi
+	@if ! grep -q "POSTGRES_PASSWORD" .env 2>/dev/null || grep -q "POSTGRES_PASSWORD=password" .env 2>/dev/null; then \
+		echo -e "$(YELLOW)POSTGRES_PASSWORD not set or using default. Run 'make generate-secrets' for production.$(NC)"; \
 	fi
 	@echo -e "$(YELLOW)Pulling latest images from Docker Hub...$(NC)"
 	@$(DC) -f docker-compose.prod.yml pull
 	@$(DC) -f docker-compose.prod.yml up -d
-	@echo -e "$(GREEN)✓ FlashBack is running!$(NC)"
+	@echo -e "$(GREEN)✓ FlashBack is running with local database!$(NC)"
 	@echo "  Frontend:  http://0.0.0.0:8080 (or http://<your-server-ip>:8080)"
 	@echo "  Backend:   http://0.0.0.0:3000 (or http://<your-server-ip>:3000)"
 	@echo "  WebSocket: ws://0.0.0.0:3000"
+	@echo "  Database:  PostgreSQL in Docker (not exposed externally)"
 	@echo ""
 	@echo "Default credentials: op@example.com / 123456"
+
+start-external-db: ## Start with external PostgreSQL database
+	@echo -e "$(GREEN)Starting FlashBack with external database...$(NC)"
+	@if [ ! -f .env ]; then \
+		echo -e "$(RED)ERROR: .env file not found!$(NC)"; \
+		echo "Create .env and configure EXTERNAL_DB_* variables"; \
+		exit 1; \
+	fi
+	@if ! grep -q "EXTERNAL_DB_HOST=" .env || [ -z "$$(grep EXTERNAL_DB_HOST= .env | cut -d= -f2)" ]; then \
+		echo -e "$(RED)ERROR: EXTERNAL_DB_HOST not set in .env!$(NC)"; \
+		echo "Configure EXTERNAL_DB_* variables for external database"; \
+		exit 1; \
+	fi
+	@echo -e "$(YELLOW)Pulling latest images from Docker Hub...$(NC)"
+	@$(DC) -f docker-compose.prod.yml -f docker-compose.external-db.yml pull
+	@$(DC) -f docker-compose.prod.yml -f docker-compose.external-db.yml up -d
+	@echo -e "$(GREEN)✓ FlashBack is running with external database!$(NC)"
+	@echo "  Frontend:  http://0.0.0.0:8080 (or http://<your-server-ip>:8080)"
+	@echo "  Backend:   http://0.0.0.0:3000 (or http://<your-server-ip>:3000)"
+	@echo "  WebSocket: ws://0.0.0.0:3000"
+	@echo "  Database:  External PostgreSQL at $$(grep EXTERNAL_DB_HOST= .env | cut -d= -f2)"
 
 stop-prod: ## Stop application (production)
 	@echo -e "$(YELLOW)Stopping FlashBack (production)...$(NC)"
@@ -144,6 +175,14 @@ clean-all: ## Stop and remove containers and volumes (WARNING: deletes database!
 	@$(DC) down -v
 	@$(DC) -f docker-compose.prod.yml down -v
 	@echo -e "$(GREEN)✓ Complete cleanup done$(NC)"
+
+##@ Security
+
+generate-secrets: ## Generate secure passwords and secrets for production
+	@echo -e "$(GREEN)Generating secure credentials...$(NC)"
+	@chmod +x scripts/generate-secrets.sh
+	@./scripts/generate-secrets.sh
+	@echo -e "$(GREEN)✓ Done! Copy the generated values to your .env file$(NC)"
 
 ##@ Utilities
 

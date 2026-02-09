@@ -5,6 +5,9 @@ Cargo.lock
 # Environment variables (contains secrets)
 .env
 **/.env
+.env.secrets
+.env.local
+.env.production
 
 # IDE
 .idea/
