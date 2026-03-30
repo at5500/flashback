@@ -315,7 +315,8 @@ pub async fn initialize_database() -> Result<StoreHaus> {
     Ok(storehaus)
 }
 
-/// Seed database with initial data for development
+/// Seed database with initial data (admin user, operator, templates).
+/// Safe to call in any environment — checks for existing records before inserting.
 pub async fn seed_database(storehaus: &StoreHaus) -> Result<()> {
     info!("Seeding database with initial data...");
 

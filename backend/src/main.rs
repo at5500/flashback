@@ -80,11 +80,9 @@ async fn main() -> Result<()> {
     let storehaus = initialize_database().await?;
     info!("Database initialized");
 
-    // Seed database in development
-    if config.is_development() {
-        if let Err(e) = seed_database(&storehaus).await {
-            error!("Error seeding database: {}", e);
-        }
+    // Seed database with initial data (safe to run repeatedly - checks for existing records)
+    if let Err(e) = seed_database(&storehaus).await {
+        error!("Error seeding database: {}", e);
     }
 
     let storehaus = Arc::new(storehaus);

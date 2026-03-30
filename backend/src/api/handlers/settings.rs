@@ -91,7 +91,7 @@ pub async fn update_settings(
                 .filter(QueryFilter::eq("id", json!(Setting::TELEGRAM_BOT_TOKEN)));
 
             settings_store
-                .update_where(query, setting)
+                .update_where(query, Some(setting))
                 .await
                 .map_err(|e| AppError::Internal(e.to_string()))?;
 
